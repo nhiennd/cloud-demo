@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  app-host:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_REPO:-nhiennd/cloud-demo}/app-host:${IMAGE_TAG:-latest}
+    container_name: oneportal-app-host
+    restart: always
+    ports:
+      - "4200:80"
+    networks:
+      - microfrontend-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  app-cloud-demo:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_REPO:-nhiennd/cloud-demo}/app-cloud-demo:${IMAGE_TAG:-latest}
+    container_name: oneportal-app-cloud-demo
+    restart: always
+    ports:
+      - "4201:80"
+    networks:
+      - microfrontend-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  microfrontend-net:
+    driver: bridge

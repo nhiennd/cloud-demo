@@ -150,3 +150,56 @@ npm run docker:down
 - **Host App trên Docker**: `http://localhost:4200`
 - **Remote App trên Docker**: `http://localhost:4201`
 
+---
+
+## ☁️ Triển Khai Lên Cloud Server & Container Registry
+
+### 1. Đóng gói & Lưu trữ Docker Image (Container Registry)
+Pipeline CI/CD tự động build và push images lên **GitHub Container Registry (GHCR)**:
+- `ghcr.io/<github-username>/cloud-demo/app-host:latest`
+- `ghcr.io/<github-username>/cloud-demo/app-cloud-demo:latest`
+
+Để chạy container trên server mà không cần build lại mã nguồn:
+```bash
+# Đăng nhập vào GHCR trên Cloud Server
+echo "YOUR_GITHUB_TOKEN" | docker login ghcr.io -u YOUR_USERNAME --password-stdin
+```
+
+### 2. Thiết lập Cloud Server (Ubuntu / Debian VPS)
+Chạy script cài đặt tự động đầy đủ Docker, Docker Compose, Nginx, UFW:
+```bash
+sudo bash deploy/scripts/setup-server.sh
+```
+
+### 3. Cấu hình Nginx Reverse Proxy Public trên Cloud Server
+1. Copy cấu hình Nginx mẫu:
+   ```bash
+   sudo cp deploy/nginx/cloud-nginx.conf /etc/nginx/sites-available/cloud-demo.conf
+   sudo ln -s /etc/nginx/sites-available/cloud-demo.conf /etc/nginx/sites-enabled/
+   ```
+2. Mở file `/etc/nginx/sites-available/cloud-demo.conf` và thay `your-domain.com` bằng tên miền hoặc IP máy chủ của bạn.
+3. Kiểm tra cú pháp và tải lại Nginx:
+   ```bash
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+4. *(Tùy chọn)* Cấp phát chứng chỉ SSL miễn phí bằng Certbot:
+   ```bash
+   sudo apt install -y certbot python3-certbot-nginx
+   sudo certbot --nginx -d your-domain.com
+   ```
+
+### 4. Triển khai ứng dụng (Production Deploy)
+Trên Cloud Server tại thư mục `/var/www/cloud-demo`:
+```bash
+# Kéo ảnh mới nhất và khởi động container
+bash deploy/scripts/deploy.sh latest
+```
+
+### 5. Tự động Deploy qua GitHub Actions (Continuous Deployment)
+Để tự động cập nhật Cloud Server mỗi khi push code lên `main`, thêm các Secrets vào GitHub Repository (**Settings > Secrets and variables > Actions**):
+- `SERVER_HOST`: IP hoặc domain của Cloud Server
+- `SERVER_USER`: Tên người dùng SSH (ví dụ: `ubuntu` hoặc `root`)
+- `SERVER_SSH_KEY`: Khóa SSH Private Key
+
+
