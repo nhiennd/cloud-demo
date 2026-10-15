@@ -1,13 +1,13 @@
 # ==========================================
 # Stage 1: Build Angular app-cloud-demo using Nx
 # ==========================================
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Install dependencies first for Docker layer caching
-COPY package*.json ./
-RUN npm ci
+COPY package*.json .npmrc* ./
+RUN npm ci --legacy-peer-deps
 
 # Copy full monorepo source
 COPY . .
