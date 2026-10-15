@@ -1,96 +1,103 @@
-# 
+# Nx Angular Micro-Frontend Monorepo (app-host & app-cloud-demo)
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+Dự án Micro-Frontend xây dựng bằng **Nx**, **Angular 18**, và **Webpack Module Federation**.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+---
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## 🏗️ Cấu Trúc Dự Án (Architecture)
 
-## Run tasks
-
-To run tasks with Nx use:
-
-```sh
-npx nx <target> <project-name>
+```text
+cloud-demo/
+├── apps/
+│   ├── app-host/               # Host Application (Shell) - Cổng 4200
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── dashboard/  # Dashboard tổng quan hệ thống Host
+│   │   │   │   ├── app.routes.ts # Cấu hình Lazy-load Remote App qua Module Federation
+│   │   │   │   └── app.component.*
+│   │   │   └── bootstrap.ts
+│   │   ├── module-federation.config.ts # Khai báo remotes: ['app-cloud-demo']
+│   │   ├── webpack.config.ts
+│   │   └── project.json
+│   │
+│   └── app-cloud-demo/         # Remote Application - Cổng 4201
+│       ├── src/
+│       │   ├── app/
+│       │   │   └── remote-entry/ # Component & Routes export cho Host nạp động
+│       │   │       ├── entry.component.ts # Giao diện Quản trị Cloud, VM, Storage
+│       │   │       └── entry.routes.ts
+│       │   └── bootstrap.ts
+│       ├── module-federation.config.ts # Exposes: { './Routes': '.../entry.routes.ts' }
+│       ├── webpack.config.ts
+│       └── project.json
+│
+├── nx.json                     # Cấu hình Nx Monorepo
+├── tsconfig.base.json          # TypeScript paths & base configuration
+└── package.json                # Dependencies & scripts
 ```
 
-For example:
+---
 
-```sh
-npx nx build myproject
+## 🚀 Hướng Dẫn Khởi Chạy (Quick Start)
+
+### 1. Khởi chạy toàn bộ hệ thống (Host + Remote)
+Chỉ cần chạy 1 lệnh, Nx sẽ tự động khởi động cả Host và Remote:
+```bash
+npm start
+# hoặc
+npm run serve
+```
+- **App Host**: Truy cập tại `http://localhost:4200`
+- **App Remote (app-cloud-demo)**: Tự động chạy tại `http://localhost:4201` và được nạp vào Host tại route: `http://localhost:4200/app-cloud-demo`
+
+### 2. Khởi chạy riêng lẻ từng ứng dụng (Standalone Development)
+Nếu bạn muốn dev độc lập từng micro-app:
+```bash
+# Chỉ chạy Host App
+npm run serve:host
+
+# Chỉ chạy Remote App (app-cloud-demo)
+npm run serve:remote
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### 3. Đóng gói cho môi trường Production (Build)
+```bash
+# Build tất cả các ứng dụng trong monorepo
+npm run build
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+# Hoặc build riêng từng app
+npm run build:host
+npm run build:remote
+```
+Bản build hoàn tất được xuất ra thư mục `dist/apps/app-host` và `dist/apps/app-cloud-demo`.
 
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-To install a new plugin you can use the `nx add` command. Here's an example of adding the React plugin:
-```sh
-npx nx add @nx/react
+### 4. Xem sơ đồ quan hệ Nx Project Graph
+```bash
+npm run graph
 ```
 
-Use the plugin's generator to create new projects. For example, to create a new React app or library:
+---
 
-```sh
-# Genenerate an app
-npx nx g @nx/react:app demo
+## ⚙️ Cơ Chế Hoạt Động (Module Federation Mechanism)
 
-# Generate a library
-npx nx g @nx/react:lib some-lib
-```
+1. **Remote (`app-cloud-demo`)**:
+   - File `apps/app-cloud-demo/module-federation.config.ts` export entry:
+     ```typescript
+     exposes: {
+       './Routes': 'apps/app-cloud-demo/src/app/remote-entry/entry.routes.ts',
+     }
+     ```
+   - Tạo ra file runtime `remoteEntry.mjs` trên cổng `4201`.
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+2. **Host (`app-host`)**:
+   - Khai báo remote trong `apps/app-host/module-federation.config.ts`:
+     ```typescript
+     remotes: ['app-cloud-demo']
+     ```
+   - Nạp động route trong `apps/app-host/src/app/app.routes.ts`:
+     ```typescript
+     {
+       path: 'app-cloud-demo',
+       loadChildren: () => import('app-cloud-demo/Routes').then((m) => m.remoteRoutes),
+     }
+     ```

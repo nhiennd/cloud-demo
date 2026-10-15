@@ -2,12 +2,49 @@
   "name": "@./source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "start": "nx serve app-host --devRemotes=app-cloud-demo",
+    "serve": "nx serve app-host --devRemotes=app-cloud-demo",
+    "serve:host": "nx serve app-host",
+    "serve:remote": "nx serve app-cloud-demo",
+    "build": "nx run-many -t build",
+    "build:host": "nx build app-host",
+    "build:remote": "nx build app-cloud-demo",
+    "graph": "nx graph"
+  },
   "private": true,
-  "dependencies": {},
   "devDependencies": {
+    "@angular-devkit/build-angular": "~18.2.0",
+    "@angular-devkit/core": "~18.2.0",
+    "@angular-devkit/schematics": "~18.2.0",
+    "@angular/cli": "~18.2.0",
+    "@angular/compiler-cli": "~18.2.0",
+    "@angular/language-service": "~18.2.0",
+    "@module-federation/enhanced": "~0.6.0",
     "@nx/js": "19.8.14",
+    "@nx/web": "19.8.14",
+    "@nx/webpack": "19.8.14",
     "@nx/workspace": "19.8.14",
-    "nx": "19.8.14"
+    "@schematics/angular": "~18.2.0",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "nx": "19.8.14",
+    "prettier": "^2.6.2",
+    "tslib": "^2.3.0",
+    "typescript": "~5.5.2"
+  },
+  "dependencies": {
+    "@angular/animations": "~18.2.0",
+    "@angular/common": "~18.2.0",
+    "@angular/compiler": "~18.2.0",
+    "@angular/core": "~18.2.0",
+    "@angular/forms": "~18.2.0",
+    "@angular/platform-browser": "~18.2.0",
+    "@angular/platform-browser-dynamic": "~18.2.0",
+    "@angular/router": "~18.2.0",
+    "rxjs": "~7.8.0",
+    "zone.js": "~0.14.3",
+    "@nx/angular": "^19.8.14"
   }
 }

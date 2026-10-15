@@ -1,0 +1,101 @@
+{
+  "name": "app-cloud-demo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/app-cloud-demo/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:webpack-browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/app-cloud-demo",
+        "index": "apps/app-cloud-demo/src/index.html",
+        "main": "apps/app-cloud-demo/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/app-cloud-demo/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/app-cloud-demo/public"
+          }
+        ],
+        "styles": ["apps/app-cloud-demo/src/styles.scss"],
+        "scripts": [],
+        "customWebpackConfig": {
+          "path": "apps/app-cloud-demo/webpack.config.ts"
+        }
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "20kb",
+              "maximumError": "40kb"
+            }
+          ],
+          "outputHashing": "all",
+          "customWebpackConfig": {
+            "path": "apps/app-cloud-demo/webpack.prod.config.ts"
+          }
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@nx/angular:dev-server",
+      "options": {
+        "port": 4201,
+        "publicHost": "http://localhost:4201"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "app-cloud-demo:build:production"
+        },
+        "development": {
+          "buildTarget": "app-cloud-demo:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "app-cloud-demo:build"
+      }
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "app-cloud-demo:build",
+        "port": 4201,
+        "watch": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "app-cloud-demo:build:development"
+        },
+        "production": {
+          "buildTarget": "app-cloud-demo:build:production"
+        }
+      }
+    }
+  }
+}
