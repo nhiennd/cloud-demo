@@ -1,0 +1,124 @@
+name: CI/CD Pipeline - Angular Micro-Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_HOST: ${{ github.repository }}/app-host
+  IMAGE_REMOTE: ${{ github.repository }}/app-cloud-demo
+
+jobs:
+  # ============================================================
+  # 1. CI Job: Lint, Typecheck, and Build using Nx
+  # ============================================================
+  ci-build:
+    name: 🔍 Lint & Build (Nx Monorepo)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build all applications in production mode
+        run: npx nx run-many -t build --configuration=production
+
+      - name: 📤 Archive Host build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-host-dist
+          path: dist/apps/app-host
+          retention-days: 7
+
+      - name: 📤 Archive Remote build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-cloud-demo-dist
+          path: dist/apps/app-cloud-demo
+          retention-days: 7
+
+  # ============================================================
+  # 2. CD Job: Build & Push Docker Images (GHCR / Local)
+  # ============================================================
+  docker-build:
+    name: 🐳 Build & Push Docker Images
+    needs: ci-build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: 🔑 Log in to GitHub Container Registry (GHCR)
+        uses: actions/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract Docker metadata (app-host)
+        id: meta-host
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_HOST }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: 🚀 Build & Push Docker Image (app-host)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/app-host/Dockerfile
+          push: true
+          tags: ${{ steps.meta-host.outputs.tags }}
+          labels: ${{ steps.meta-host.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🏷️ Extract Docker metadata (app-cloud-demo)
+        id: meta-remote
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_REMOTE }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: 🚀 Build & Push Docker Image (app-cloud-demo)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/app-cloud-demo/Dockerfile
+          push: true
+          tags: ${{ steps.meta-remote.outputs.tags }}
+          labels: ${{ steps.meta-remote.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

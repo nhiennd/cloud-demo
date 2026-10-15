@@ -101,3 +101,52 @@ npm run graph
        loadChildren: () => import('app-cloud-demo/Routes').then((m) => m.remoteRoutes),
      }
      ```
+
+---
+
+## 🔄 Luồng CI/CD (GitHub Actions & Docker)
+
+Hệ thống được trang bị pipeline CI/CD tự động qua file cấu hình [`.github/workflows/ci-cd.yml`](file:///.github/workflows/ci-cd.yml):
+
+```mermaid
+graph LR
+    Push[Code Push / PR] --> CI[Job 1: CI Build]
+    CI --> Check[npm ci & Nx Build Production]
+    Check --> Artifacts[Upload Dist Artifacts]
+    Artifacts --> CD[Job 2: CD Docker Build]
+    CD --> ImgHost[Build & Tag app-host]
+    CD --> ImgRemote[Build & Tag app-cloud-demo]
+    ImgHost --> GHCR[Push to ghcr.io Registry]
+    ImgRemote --> GHCR
+```
+
+### 1. Quy trình CI (Kiểm tra & đóng gói)
+- Kích hoạt khi có `push` hoặc `pull_request` vào nhánh `main` / `master`.
+- Cài đặt dependencies chuẩn xác bằng `npm ci`.
+- Tự động biên dịch toàn bộ các ứng dụng sang chế độ Production với Nx.
+- Lưu trữ build artifacts (`dist/apps/app-host` và `dist/apps/app-cloud-demo`) trên GitHub Actions (7 ngày).
+
+### 2. Quy trình CD (Đóng gói Docker & Đẩy lên Container Registry)
+- Tự động kích hoạt sau khi bước CI thành công trên nhánh chính (`main`/`master`).
+- Xây dựng Docker images multi-stage siêu nhẹ dựa trên `nginx:1.25-alpine`:
+  - `ghcr.io/<org>/app-host`: Container phục vụ Host Shell (đã cấu hình SPA fallback).
+  - `ghcr.io/<org>/app-cloud-demo`: Container phục vụ Remote App (đã cấu hình **CORS** cho Module Federation).
+- Sử dụng GitHub Actions Cache (`type=gha`) để tăng tốc build Docker tối đa.
+
+### 3. Chạy thử nghiệm Docker nội bộ (Local Docker Compose)
+Bạn có thể khởi chạy môi trường Production container hóa ngay trên máy bằng Docker Compose:
+
+```bash
+# Build lại các Docker image cho cả Host và Remote
+npm run docker:build
+
+# Khởi chạy các container chạy ngầm
+npm run docker:up
+
+# Dừng các container
+npm run docker:down
+```
+
+- **Host App trên Docker**: `http://localhost:4200`
+- **Remote App trên Docker**: `http://localhost:4201`
+

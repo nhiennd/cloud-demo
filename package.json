@@ -10,7 +10,10 @@
     "build": "nx run-many -t build",
     "build:host": "nx build app-host",
     "build:remote": "nx build app-cloud-demo",
-    "graph": "nx graph"
+    "graph": "nx graph",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
   },
   "private": true,
   "devDependencies": {

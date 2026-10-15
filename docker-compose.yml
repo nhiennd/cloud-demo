@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app-host:
+    build:
+      context: .
+      dockerfile: apps/app-host/Dockerfile
+    container_name: oneportal-app-host
+    ports:
+      - "4200:80"
+    restart: unless-stopped
+    depends_on:
+      - app-cloud-demo
+    networks:
+      - microfrontend-net
+
+  app-cloud-demo:
+    build:
+      context: .
+      dockerfile: apps/app-cloud-demo/Dockerfile
+    container_name: oneportal-app-cloud-demo
+    ports:
+      - "4201:80"
+    restart: unless-stopped
+    networks:
+      - microfrontend-net
+
+networks:
+  microfrontend-net:
+    driver: bridge
