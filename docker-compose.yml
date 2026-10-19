@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: apps/app-host/Dockerfile
-    container_name: oneportal-app-host
+    container_name: ncloudlab-app-host
     ports:
       - "4200:80"
     restart: unless-stopped
@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: apps/app-cloud-demo/Dockerfile
-    container_name: oneportal-app-cloud-demo
+    container_name: ncloudlab-app-cloud-demo
     ports:
       - "4201:80"
     restart: unless-stopped

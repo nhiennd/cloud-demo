@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app-host:
     image: ${REGISTRY:-ghcr.io}/${IMAGE_REPO:-nhiennd/cloud-demo}/app-host:${IMAGE_TAG:-latest}
-    container_name: oneportal-app-host
+    container_name: ncloudlab-app-host
     restart: always
     ports:
       - "4200:80"
@@ -17,7 +17,7 @@ services:
 
   app-cloud-demo:
     image: ${REGISTRY:-ghcr.io}/${IMAGE_REPO:-nhiennd/cloud-demo}/app-cloud-demo:${IMAGE_TAG:-latest}
-    container_name: oneportal-app-cloud-demo
+    container_name: ncloudlab-app-cloud-demo
     restart: always
     ports:
       - "4201:80"

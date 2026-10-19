@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface CloudInstance {
@@ -27,6 +27,36 @@ interface CloudInstance {
           <span>Module: <strong>app-cloud-demo</strong></span>
           <span class="separator">•</span>
           <span>Source: <code>http://localhost:4201/remoteEntry.mjs</code></span>
+        </div>
+      </div>
+
+      <!-- Google SSO Sync Banner in Remote MFE -->
+      <div class="sso-banner" [class.logged-in]="!!currentUser">
+        <div class="sso-left">
+          <div class="sso-icon">
+            <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24Z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"/>
+            </svg>
+          </div>
+          <div class="sso-text" *ngIf="currentUser">
+            <span class="sso-tag">GOOGLE SSO ĐỒNG BỘ THÀNH CÔNG</span>
+            <div class="sso-details">
+              Xin chào <strong>{{ currentUser.name }}</strong> ({{ currentUser.email }}) — Quyền Quản trị viên Cloud được xác thực qua Google.
+            </div>
+          </div>
+          <div class="sso-text" *ngIf="!currentUser">
+            <span class="sso-tag guest">CHƯA ĐĂNG NHẬP GOOGLE</span>
+            <div class="sso-details">
+              Đang hoạt động ở chế độ khách (Guest). Vui lòng đăng nhập Google ở thanh điều hướng để mở khóa đầy đủ quyền hạn.
+            </div>
+          </div>
+        </div>
+        <div class="sso-badge-status" [class.active]="!!currentUser">
+          <span class="dot"></span>
+          <span>{{ currentUser ? 'SSO Active' : 'Guest Mode' }}</span>
         </div>
       </div>
 
@@ -72,50 +102,48 @@ interface CloudInstance {
         <div class="metric-card">
           <div class="metric-icon icon-blue">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             </svg>
           </div>
           <div class="metric-body">
-            <span class="metric-label">Tải CPU Trung Bình</span>
-            <div class="metric-value">{{ averageCpu }}%</div>
-            <span class="metric-delta text-blue">4 vCPU / Instance</span>
+            <span class="metric-label">Độ trễ trung bình</span>
+            <div class="metric-value">{{ pingLatency }} ms</div>
+            <span class="metric-delta text-emerald">Tối ưu (ap-southeast-1)</span>
           </div>
         </div>
 
         <div class="metric-card">
-          <div class="metric-icon icon-purple">
+          <div class="metric-icon icon-violet">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
-              <path d="M12 12v9"/>
-              <path d="m8 17 4 4 4-4"/>
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
           </div>
           <div class="metric-body">
-            <span class="metric-label">Lưu Trữ S3 Storage</span>
-            <div class="metric-value">2.4 TB</div>
-            <span class="metric-delta text-purple">3 Buckets kích hoạt</span>
+            <span class="metric-label">Chi phí ước tính / Giờ</span>
+            <div class="metric-value">$0.48 / h</div>
+            <span class="metric-delta text-muted">~ 11,500 đ / h</span>
           </div>
         </div>
 
         <div class="metric-card">
           <div class="metric-icon icon-amber">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              <path d="M12 20v-6M6 20V10M18 20V4"/>
             </svg>
           </div>
           <div class="metric-body">
-            <span class="metric-label">Chi Phí Ước Tính</span>
-            <div class="metric-value">$142.80</div>
-            <span class="metric-delta text-amber">Chu kỳ tháng 10</span>
+            <span class="metric-label">Tải CPU Cụm</span>
+            <div class="metric-value">{{ averageCpu }}%</div>
+            <span class="metric-delta text-amber">Ổn định</span>
           </div>
         </div>
       </div>
 
       <!-- Cloud Instances Table -->
-      <div class="table-card">
+      <div class="table-container">
         <div class="table-header">
-          <h3 class="table-title">Danh Sách Máy Chủ Đám Mây (Cloud Virtual Machines)</h3>
-          <span class="table-badge">{{ instances.length }} tài nguyên</span>
+          <h3 class="table-title">Danh Sách Máy Chủ Ảo Đang Hoạt Động</h3>
+          <span class="table-count">{{ instances.length }} tài nguyên</span>
         </div>
 
         <div class="table-responsive">
@@ -175,20 +203,18 @@ interface CloudInstance {
     .remote-wrapper {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 2rem 1.5rem 3rem;
+      padding: 2rem 1.5rem 4rem;
     }
 
     .remote-banner {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.05));
+      align-items: center;
+      background: rgba(16, 185, 129, 0.08);
       border: 1px solid rgba(16, 185, 129, 0.25);
       border-radius: 12px;
       padding: 0.8rem 1.2rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.25rem;
     }
 
     .banner-badge {
@@ -236,6 +262,101 @@ interface CloudInstance {
       color: #4b5563;
     }
 
+    /* Google SSO Banner */
+    .sso-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 0.85rem 1.25rem;
+      margin-bottom: 2rem;
+      transition: all 0.25s ease;
+    }
+
+    .sso-banner.logged-in {
+      background: linear-gradient(135deg, rgba(66, 133, 244, 0.12) 0%, rgba(52, 168, 83, 0.08) 100%);
+      border-color: rgba(66, 133, 244, 0.35);
+      box-shadow: 0 4px 16px rgba(66, 133, 244, 0.1);
+    }
+
+    .sso-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .sso-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sso-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .sso-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #60a5fa;
+    }
+
+    .sso-tag.guest {
+      color: #9ca3af;
+    }
+
+    .sso-details {
+      font-size: 0.84rem;
+      color: #d1d5db;
+    }
+
+    .sso-details strong {
+      color: #f9fafb;
+    }
+
+    .sso-badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.3rem 0.7rem;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #9ca3af;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      white-space: nowrap;
+    }
+
+    .sso-badge-status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #9ca3af;
+    }
+
+    .sso-badge-status.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .sso-badge-status.active .dot {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
     .cloud-header {
       display: flex;
       justify-content: space-between;
@@ -248,83 +369,76 @@ interface CloudInstance {
     .cloud-title {
       font-size: 1.85rem;
       font-weight: 800;
-      letter-spacing: -0.02em;
       color: #f9fafb;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.02em;
     }
 
     .cloud-subtitle {
-      color: #9ca3af;
       font-size: 0.95rem;
+      color: #9ca3af;
     }
 
     .header-actions {
       display: flex;
       gap: 0.75rem;
-      align-items: center;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      padding: 0.65rem 1.2rem;
+      gap: 0.5rem;
+      padding: 0.65rem 1.15rem;
       border-radius: 10px;
       font-size: 0.88rem;
       font-weight: 600;
-      border: none;
       cursor: pointer;
       transition: all 0.2s ease;
+      border: none;
     }
 
     .btn-ping {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       color: #e5e7eb;
-      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .btn-ping:hover {
       background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
     }
 
     .btn-add {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      background: #3b82f6;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     .btn-add:hover {
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
-      transform: translateY(-1px);
+      background: #2563eb;
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
     }
 
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 1.25rem;
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
     }
 
     .metric-card {
-      background: rgba(17, 24, 39, 0.7);
+      background: rgba(17, 24, 39, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 14px;
-      padding: 1.4rem;
+      padding: 1.25rem;
       display: flex;
-      gap: 1rem;
       align-items: center;
-      transition: transform 0.2s ease;
-    }
-
-    .metric-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.15);
+      gap: 1.2rem;
     }
 
     .metric-icon {
-      width: 46px;
-      height: 46px;
+      width: 48px;
+      height: 48px;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -333,22 +447,27 @@ interface CloudInstance {
     }
 
     .icon-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-    .icon-purple { background: rgba(139, 92, 246, 0.15); color: #c084fc; }
-    .icon-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .icon-blue    { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .icon-violet  { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+    .icon-amber   { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+    .metric-body {
+      display: flex;
+      flex-direction: column;
+    }
 
     .metric-label {
       font-size: 0.8rem;
       color: #9ca3af;
-      font-weight: 500;
+      margin-bottom: 0.25rem;
     }
 
     .metric-value {
-      font-size: 1.45rem;
-      font-weight: 800;
+      font-size: 1.4rem;
+      font-weight: 700;
       color: #f9fafb;
       line-height: 1.2;
-      margin: 0.2rem 0;
+      margin-bottom: 0.2rem;
     }
 
     .metric-delta {
@@ -357,37 +476,36 @@ interface CloudInstance {
     }
 
     .text-emerald { color: #34d399; }
-    .text-blue { color: #60a5fa; }
-    .text-purple { color: #c084fc; }
-    .text-amber { color: #fbbf24; }
+    .text-amber   { color: #fbbf24; }
+    .text-muted   { color: #9ca3af; }
 
-    .table-card {
-      background: rgba(17, 24, 39, 0.7);
+    .table-container {
+      background: rgba(17, 24, 39, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
-      padding: 1.5rem;
       overflow: hidden;
     }
 
     .table-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.2rem;
     }
 
     .table-title {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 700;
-      color: #f3f4f6;
+      color: #f9fafb;
     }
 
-    .table-badge {
+    .table-count {
       font-size: 0.78rem;
-      color: #9ca3af;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.08);
       padding: 0.2rem 0.6rem;
-      border-radius: 6px;
+      border-radius: 20px;
+      color: #9ca3af;
     }
 
     .table-responsive {
@@ -401,20 +519,25 @@ interface CloudInstance {
     }
 
     .cloud-table th {
-      font-size: 0.78rem;
+      background: rgba(11, 15, 25, 0.6);
+      padding: 0.85rem 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #9ca3af;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #6b7280;
-      padding: 0.8rem 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      font-weight: 600;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .cloud-table td {
-      padding: 1rem;
+      padding: 1rem 1.25rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       font-size: 0.88rem;
       color: #d1d5db;
+    }
+
+    .cloud-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
     }
 
     .instance-name {
@@ -434,37 +557,41 @@ interface CloudInstance {
     }
 
     .region-pill {
-      font-size: 0.75rem;
+      font-size: 0.78rem;
+      color: #cbd5e1;
       background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
       padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-      color: #9ca3af;
+      border-radius: 4px;
     }
 
     .code-font {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.82rem;
+      color: #93c5fd;
     }
 
     .cpu-bar-container {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      width: 100px;
+      width: 120px;
+      background: rgba(255, 255, 255, 0.08);
+      height: 6px;
+      border-radius: 3px;
+      position: relative;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 0.5rem;
     }
 
     .cpu-bar {
-      height: 6px;
-      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      height: 100%;
       border-radius: 3px;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
       transition: width 0.3s ease;
     }
 
     .cpu-text {
-      font-size: 0.75rem;
-      color: #9ca3af;
+      font-size: 0.78rem;
       font-family: 'JetBrains Mono', monospace;
+      color: #9ca3af;
     }
 
     .status-badge {
@@ -472,7 +599,7 @@ interface CloudInstance {
       align-items: center;
       gap: 0.4rem;
       padding: 0.25rem 0.65rem;
-      border-radius: 9999px;
+      border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 600;
     }
@@ -484,9 +611,9 @@ interface CloudInstance {
     }
 
     .status-badge.stopped {
-      background: rgba(107, 114, 128, 0.15);
-      color: #9ca3af;
-      border: 1px solid rgba(107, 114, 128, 0.3);
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
     .badge-dot {
@@ -527,8 +654,19 @@ interface CloudInstance {
     }
   `]
 })
-export class RemoteEntryComponent {
+export class RemoteEntryComponent implements OnInit, OnDestroy {
+  currentUser: any = null;
   pingLatency: number | null = 14;
+
+  private authListener = (event: any) => {
+    this.currentUser = event.detail;
+  };
+
+  private storageListener = (event: StorageEvent) => {
+    if (event.key === 'ncloudlab_google_user' || event.key === 'oneportal_google_user') {
+      this.loadUserFromStorage();
+    }
+  };
 
   instances: CloudInstance[] = [
     {
@@ -568,6 +706,33 @@ export class RemoteEntryComponent {
       status: 'stopped'
     }
   ];
+
+  ngOnInit(): void {
+    this.loadUserFromStorage();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ncloudlab:auth-change', this.authListener);
+      window.addEventListener('oneportal:auth-change', this.authListener);
+      window.addEventListener('storage', this.storageListener);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('ncloudlab:auth-change', this.authListener);
+      window.removeEventListener('oneportal:auth-change', this.authListener);
+      window.removeEventListener('storage', this.storageListener);
+    }
+  }
+
+  private loadUserFromStorage(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const data = localStorage.getItem('ncloudlab_google_user') || localStorage.getItem('oneportal_google_user');
+      this.currentUser = data ? JSON.parse(data) : null;
+    } catch {
+      this.currentUser = null;
+    }
+  }
 
   get runningCount(): number {
     return this.instances.filter(i => i.status === 'running').length;
